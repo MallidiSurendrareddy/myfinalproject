@@ -1,0 +1,8 @@
+# deploy-nginx.yaml
+
+---
+- name: Deploy nginx application
+  hosts: localhost
+  roles:
+    - nginxdeployment
+
