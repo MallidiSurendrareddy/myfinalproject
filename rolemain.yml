@@ -1,0 +1,51 @@
+---
+# tasks file for nginxdeployment
+- name: Pulling ECR Image From ECR Repository
+  shell: $(aws ecr get-login --no-include-email --region us-east-1) && docker pull "400017865169.dkr.ecr.us-east-1.amazonaws.com/newecr"
+
+- name: NGINX Deployment
+  k8s:
+    state: present
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-deployment
+        namespace: default
+        labels:
+          app: nginx
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: nginx
+        template:
+          metadata:
+            labels:
+              app: nginx
+          spec:
+            containers:
+              - name: nginx
+                image: "400017865169.dkr.ecr.us-east-1.amazonaws.com/newecr"
+                ports:
+                  - containerPort: 80
+            imagePullSecrets:
+              - name: regcred
+
+- name: NGINX Service
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nginx-service
+        namespace: default
+      spec:
+        selector:
+          app: nginx
+        type: LoadBalancer
+        ports:
+          - protocol: TCP
+            port: 8084
+            targetPort: 80
